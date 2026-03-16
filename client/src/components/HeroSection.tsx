@@ -30,6 +30,15 @@ export default function HeroSection() {
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-deep-space/40" />
+        {/* Subtle grid texture overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.04] pointer-events-none"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(74,234,220,1) 1px, transparent 1px), linear-gradient(90deg, rgba(74,234,220,1) 1px, transparent 1px)",
+            backgroundSize: "80px 80px",
+          }}
+        />
       </div>
 
       {/* Animated gradient orbs */}

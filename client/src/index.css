@@ -224,6 +224,93 @@
   .animate-pulse-glow {
     animation: pulse-glow 3s ease-in-out infinite;
   }
+
+  /* ── Section-unique animations ── */
+
+  /* Problem: danger pulse ring */
+  @keyframes danger-ring {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+    50% { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+  }
+  @keyframes danger-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.4); }
+  }
+  .animate-danger-pulse { animation: danger-pulse 1.2s ease-in-out infinite; }
+
+  /* Solution: emerald ring pulse */
+  @keyframes emerald-ring {
+    0% { transform: scale(1); opacity: 0.5; }
+    100% { transform: scale(1.7); opacity: 0; }
+  }
+  .animate-emerald-ring { animation: emerald-ring 2s ease-out infinite; }
+
+  /* How It Works: scan line sweep */
+  @keyframes scan-line {
+    0% { top: 0%; opacity: 0.6; }
+    100% { top: 100%; opacity: 0; }
+  }
+  .animate-scan { animation: scan-line 3s linear infinite; }
+
+  /* How It Works: dot grid scroll */
+  @keyframes dot-scroll {
+    0% { background-position: 0 0; }
+    100% { background-position: 40px 40px; }
+  }
+  .animate-dot-grid { animation: dot-scroll 4s linear infinite; }
+
+  /* Features: shimmer sweep on hover */
+  @keyframes shimmer {
+    0% { transform: translateX(-150%) skewX(-20deg); }
+    100% { transform: translateX(250%) skewX(-20deg); }
+  }
+  .shimmer-hover:hover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent);
+    animation: shimmer 0.7s ease forwards;
+    pointer-events: none;
+  }
+
+  /* Trust: spin-slow for icon rings */
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .animate-spin-slow { animation: spin-slow 8s linear infinite; }
+
+  /* CTA: animated rainbow border */
+  @keyframes border-hue {
+    0%   { border-color: #4AEADC; box-shadow: 0 0 30px #4AEADC33, inset 0 0 30px #4AEADC0A; }
+    25%  { border-color: #8B5CF6; box-shadow: 0 0 30px #8B5CF633, inset 0 0 30px #8B5CF60A; }
+    50%  { border-color: #F59E0B; box-shadow: 0 0 30px #F59E0B33, inset 0 0 30px #F59E0B0A; }
+    75%  { border-color: #EC4899; box-shadow: 0 0 30px #EC489933, inset 0 0 30px #EC48990A; }
+    100% { border-color: #4AEADC; box-shadow: 0 0 30px #4AEADC33, inset 0 0 30px #4AEADC0A; }
+  }
+  .animate-border-rainbow {
+    border: 1px solid #4AEADC;
+    animation: border-hue 6s linear infinite;
+  }
+
+  /* CTA: shimmer sweep on primary button */
+  .btn-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    transform: skewX(-20deg);
+    transition: none;
+  }
+  .btn-shimmer:hover::after {
+    animation: shimmer 0.6s ease forwards;
+  }
 }
 
 /* Smooth scrolling */
