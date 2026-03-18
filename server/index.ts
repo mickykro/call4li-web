@@ -23,6 +23,16 @@ async function startServer() {
     res.sendFile(path.join(staticPath, "index.html"));
   });
 
+  // Handle malformed URLs (e.g. unresolved %VITE_*% env vars in HTML)
+  app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    if (err instanceof URIError) {
+      res.status(400).end();
+      return;
+    }
+    console.error(err);
+    res.status(500).end();
+  });
+
   const port = process.env.PORT || 3000;
 
   server.listen(port, () => {

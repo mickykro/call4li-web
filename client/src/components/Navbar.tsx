@@ -85,8 +85,9 @@ export default function Navbar() {
             </a>
           ))}
           <a
-            href="#cta"
-            onClick={(e) => handleClick(e, "#cta")}
+            href="https://wa.me/972553163293"
+            target="_blank"
+            rel="noopener noreferrer"
             className="bg-aurora-teal/15 text-aurora-teal border border-aurora-teal/30 px-5 py-2 rounded-lg text-sm font-semibold hover:bg-aurora-teal/25 hover:border-aurora-teal/50 transition-all duration-300 glow-teal-sm"
           >
             התחילו עכשיו

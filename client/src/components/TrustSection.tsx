@@ -51,11 +51,11 @@ export default function TrustSection() {
   return (
     <section ref={ref} className="relative py-20 lg:py-28 overflow-hidden">
       {/* Horizontal scan-band background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-deep-space via-midnight to-deep-space" />
+      <div className="absolute inset-0 bg-gradient-to-b from-deep-space via-slate-700/40 to-deep-space" />
 
       {/* Horizontal glowing band */}
-      <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none" />
-      <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-[120px] bg-gradient-to-b from-transparent via-white/[0.02] to-transparent pointer-events-none" />
+      <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+      <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-[200px] bg-gradient-to-b from-transparent via-white/[0.05] to-transparent pointer-events-none" />
 
       <div className="container relative z-10">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6">

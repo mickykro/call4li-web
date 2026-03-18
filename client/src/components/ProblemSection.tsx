@@ -52,10 +52,10 @@ export default function ProblemSection() {
   return (
     <section id="problem" ref={ref} className="relative py-24 lg:py-36 overflow-hidden">
       {/* Red-tinted background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-deep-space via-red-950/15 to-deep-space" />
+      <div className="absolute inset-0 bg-gradient-to-b from-deep-space via-red to-deep-space" />
 
       {/* Glowing red orb dead center */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-red-700/8 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-900/15 rounded-full pointer-events-none" />
 
       <div className="container relative z-10">
         {/* Section header */}
@@ -143,8 +143,7 @@ export default function ProblemSection() {
 
         {/* Pull quote — red left border with animated width expansion */}
         <motion.div
-          className="mt-16 lg:mt-20 glass-card p-8 max-w-2xl border-r-4 border-red-500 !rounded-r-none"
-          style={{ borderRightColor: "#EF4444" }}
+          className="mt-16 lg:mt-20 glass-card p-8 max-w-2xl border-r-4 !rounded-r-none"
           initial={{ opacity: 0, x: 40 }}
           animate={inView ? { opacity: 1, x: 0 } : {}}
           transition={{ delay: 0.85, duration: 0.7 }}
