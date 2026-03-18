@@ -1,4 +1,5 @@
 {
+  "composite": true,
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2023"],
@@ -10,7 +11,7 @@
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
-    "noEmit": true,
+    "noEmit": false,
 
     /* Linting */
     "strict": true,
