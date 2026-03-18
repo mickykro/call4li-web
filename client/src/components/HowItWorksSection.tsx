@@ -28,7 +28,7 @@ export default function HowItWorksSection() {
     <section id="how-it-works" ref={ref} className="relative py-24 lg:py-36 overflow-hidden">
       {/* Animated dot-grid background */}
       <div
-        className="absolute inset-0 animate-dot-grid pointer-events-none opacity-[0.07]"
+        className="absolute inset-0 animate-dot-grid pointer-events-none opacity-[0.18]"
         style={{
           backgroundImage: "radial-gradient(circle, #38BDF8 1px, transparent 1px)",
           backgroundSize: "40px 40px",
@@ -36,11 +36,11 @@ export default function HowItWorksSection() {
       />
 
       {/* Sky-blue tint overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-deep-space via-sky-950/20 to-deep-space" />
+      <div className="absolute inset-0 bg-gradient-to-b from-deep-space via-sky-800/35 to-deep-space" />
 
       {/* Glowing orbs */}
-      <div className="absolute top-0 right-1/3 w-[500px] h-[200px] bg-sky-400/6 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-0 left-1/3 w-[400px] h-[200px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute top-0 right-1/3 w-[500px] h-[250px] bg-sky-400/30 blur-[60px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 left-1/3 w-[400px] h-[200px] bg-cyan-400/25 blur-[50px] rounded-full pointer-events-none" />
 
       <div className="container relative z-10">
         {/* Header */}

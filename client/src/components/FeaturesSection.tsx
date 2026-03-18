@@ -66,12 +66,12 @@ export default function FeaturesSection() {
     <section id="features" ref={ref} className="relative py-24 lg:py-36 overflow-hidden">
       {/* Background image */}
       <div className="absolute inset-0">
-        <img src={FEATURES_BG} alt="" className="w-full h-full object-cover opacity-20" />
-        <div className="absolute inset-0 bg-deep-space/85" />
+        <img src={FEATURES_BG} alt="" className="w-full h-full object-cover opacity-40" />
+        <div className="absolute inset-0 bg-deep-space/70" />
       </div>
 
       {/* Radial amber glow center */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-amber-500/5 blur-[150px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-amber-500/25 blur-[70px] rounded-full pointer-events-none" />
 
       <div className="container relative z-10">
         {/* Header */}
