@@ -46,12 +46,10 @@ const PrivacyPolicy = () => {
                 <li><strong>תיאור העסק</strong> — כדי להתאים את השירות לצרכים שלך</li>
                 <li><strong>כתובת אימייל</strong> — לתקשורת ועדכונים</li>
                 <li><strong>מספר טלפון</strong> — לאספקת שירותי העברת שיחות</li>
-                <li><strong>מזהה לקוח (Client ID)</strong> — לניהול החשבון שלך במערכת</li>
               </ul>
 
               <h3 className="text-xl font-medium mb-3 mt-6">2.2 מידע שנאסף אוטומטית</h3>
               <ul className="list-disc pr-6 space-y-2">
-                <li>מידע טכני כמו כתובת IP, סוג דפדפן ומערכת הפעלה</li>
                 <li>נתוני שימוש באתר ופעולות שבוצעו</li>
                 <li>תאריך ושעת פניות ופעולות</li>
               </ul>

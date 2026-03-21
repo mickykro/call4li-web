@@ -10,6 +10,9 @@ import Onboard from "./pages/Onboard";
 import Delete from "./pages/Delete";
 import FAQ from "./pages/FAQ";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfUse from "./pages/TermsOfUse";
+import Accessibility from "./pages/Accessibility";
+import CookieNotice from "./components/CookieNotice";
 
 function Router() {
   return (
@@ -20,6 +23,8 @@ function Router() {
       <Route path={"/delete"} component={Delete} />
       <Route path={"/faq"} component={FAQ} />
       <Route path={"/privacy"} component={PrivacyPolicy} />
+      <Route path={"/terms"} component={TermsOfUse} />
+      <Route path={"/accessibility"} component={Accessibility} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -33,6 +38,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Router />
+          <CookieNotice />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

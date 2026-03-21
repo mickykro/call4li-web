@@ -86,9 +86,9 @@ export default function HeroSection() {
 
             {/* Subtitle */}
             <p className="text-lg lg:text-xl text-text-secondary leading-relaxed max-w-xl mb-10">
-              <strong className="text-aurora-teal">פורלי</strong> היא העוזרת האישית
-              החכמה שמטפלת בכל שיחה שלא נענתה — אוטומטית, דרך WhatsApp, בשלוש
-              שפות. בלי שתרימו אצבע.
+              <strong className="text-aurora-teal">פורלי</strong> מצילה לידים חמים
+              שלא נענו — אוטומטית, ב-WhatsApp, תוך 30 שניות. לפני שיספיקו לעבור למתחרה.
+              {/* EN: Forli saves hot leads that go unanswered — automatically on WhatsApp, in 30 seconds. Before they call your competitor. */}
             </p>
 
             {/* Stats row */}
@@ -99,9 +99,9 @@ export default function HeroSection() {
               transition={{ delay: 0.6, duration: 0.8 }}
             >
               {[
-                { value: "570K+", label: "עסקים פעילים בישראל", color: "text-aurora-teal" },
-                { value: "85%", label: "לא ישאירו הודעה", color: "text-aurora-violet" },
-                { value: "24/7", label: "זמינות מלאה", color: "text-aurora-blue" },
+                { value: "5 דקות", label: "חלון הזמן לענות ללקוח חם", color: "text-aurora-teal" }, // EN: 5 min / Window to respond to a hot lead
+                { value: "85%", label: "לא ישאירו הודעה קולית", color: "text-aurora-violet" }, // EN: 85% / Won't leave a voicemail
+                { value: "30 שניות", label: "עד שפורלי כבר ענתה", color: "text-aurora-blue" }, // EN: 30 sec / Until Forli has already responded
               ].map((stat, i) => (
                 <div key={i} className="glass-card px-4 sm:px-5 py-3 text-center flex-1">
                   <div

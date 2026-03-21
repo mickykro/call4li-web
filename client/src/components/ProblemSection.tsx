@@ -7,37 +7,40 @@
 
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { PhoneOff, UserX, TrendingDown } from "lucide-react";
+import { PhoneOff, EyeOff, Trophy } from "lucide-react";
 
 const problems = [
   {
     icon: PhoneOff,
     number: "01",
-    title: "שיחות ללא מענה",
+    title: "ליד חם שלא נענה — הלך לצמיתות", // EN: An unanswered hot lead is gone for good
     description:
-      "כל יום, מיליוני שיחות טלפון לעסקים קטנים נשארות ללא מענה. הלקוח לא ממתין — הוא פשוט הולך.",
+      "הלקוח שהתקשר עכשיו היה מוכן לקנות. הוא לא ישאיר הודעה. הוא לא יחזור. הוא כבר מדבר עם המתחרה שלך.",
+      // EN: The customer who just called was ready to buy. They won't leave a message. They won't call back. They're already talking to your competitor.
     accent: "#EF4444",       // red-500
     accentBg: "rgba(239,68,68,0.10)",
     borderClass: "border-r-2 border-red-500",
     slideFrom: { x: 60 },
   },
   {
-    icon: UserX,
+    icon: EyeOff,
     number: "02",
-    title: "הלקוח לא ישאיר הודעה",
+    title: "אתה לא יודע כמה אתה מפסיד", // EN: You can't see what you're losing
     description:
-      "הלקוח לא ישאיר הודעה קולית. הוא ילך למתחרה. כל שיחה שלא נענתה היא הכנסה שאבדה — לצמיתות.",
+      "כמה לקוחות התקשרו השבוע ולא נענו? אין לך מושג. הכנסה שנעלמת בלי עקבות — כל יום.",
+      // EN: How many customers called this week and got no answer? You have no idea. Revenue disappearing without a trace — every day.
     accent: "#F97316",       // orange-500
     accentBg: "rgba(249,115,22,0.10)",
     borderClass: "border-r-2 border-orange-500",
     slideFrom: { y: 50 },
   },
   {
-    icon: TrendingDown,
+    icon: Trophy,
     number: "03",
-    title: "עסקים קטנים = צוות קטן",
+    title: "המתחרה שלך כבר ענה", // EN: Your competitor already responded
     description:
-      "רוב 570,000 העסקים הפעילים בישראל מנוהלים על ידי אדם אחד או שניים. אי אפשר תמיד לענות לטלפון.",
+      "בזמן שאתה עסוק ולא עונה — המתחרה שלך כבר קיבל את הפרטים וסגר את העסקה.",
+      // EN: While you're busy and not answering — your competitor already collected their details and closed the deal.
     accent: "#FBBF24",       // amber-400
     accentBg: "rgba(251,191,36,0.10)",
     borderClass: "border-r-2 border-amber-400",
@@ -149,8 +152,8 @@ export default function ProblemSection() {
           transition={{ delay: 0.85, duration: 0.7 }}
         >
           <blockquote className="text-xl lg:text-2xl font-bold text-text-primary leading-snug">
-            "בישראל לבדה ישנם כ-<span style={{ color: "#EF4444" }}>570,000</span> עסקים פעילים.
-            רובם לא יכולים לענות לכל שיחה."
+            "כל שיחה שלא נענתה היא ליד חם שהפך לעסקה אצל המתחרה שלך."
+            {/* EN: Every missed call is a hot lead that became a deal at your competitor's. */}
           </blockquote>
         </motion.div>
       </div>
