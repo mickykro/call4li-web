@@ -25,6 +25,8 @@ export default defineConfig({
     allowedHosts: [
       "localhost",
       "127.0.0.1",
+      "3000-iekcd7oisjr62i1rjjagu-5aa85d45.sg1.manus.computer",
+      ".manus.computer",
     ],
     fs: {
       strict: true,
