@@ -110,7 +110,7 @@ export default function HeroSection() {
                   >
                     {stat.value}
                   </div>
-                  <div className="text-xs text-text-muted mt-1">{stat.label}</div>
+                  <div className="text-xs mt-1 text-green-100">{stat.label}</div>
                 </div>
               ))}
             </motion.div>

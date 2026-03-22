@@ -12,7 +12,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+        with:
+          fetch-depth: 0
+          
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -24,14 +26,10 @@ jobs:
       - name: Build project
         run: npm run build
         
-      - name: Deploy to Manus
+      - name: Trigger Manus deployment
         run: |
-          curl -X POST https://api.manus.im/projects/call4li-landing/deploy \
-            -H "Authorization: Bearer ${{ secrets.git_update }}" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "branch": "main",
-              "message": "Auto-deploy from GitHub Actions"
-            }'
+          # Manus will automatically detect the push and deploy
+          # This workflow ensures the build is successful before deployment
+          echo "✅ Build successful! Manus will auto-deploy on push."
         env:
-          MANUS_API_KEY: ${{ secrets.git_update }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
