@@ -7,12 +7,10 @@ import FeaturesSection from "@/components/FeaturesSection";
 import TrustSection from "@/components/TrustSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
-// import SplineBackground from "@/components/SplineBackground";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-deep-space text-text-primary" dir="rtl">
-      {/* <SplineBackground /> */}
       <Navbar />
       <HeroSection />
       <ProblemSection />

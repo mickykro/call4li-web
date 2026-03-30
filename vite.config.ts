@@ -14,6 +14,7 @@ export default defineConfig({
   },
   envDir: path.resolve(import.meta.dirname),
   root: path.resolve(import.meta.dirname, "client"),
+  publicDir: path.resolve(import.meta.dirname, "client", "public"),
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
@@ -32,15 +33,33 @@ export default defineConfig({
       strict: true,
       deny: ["**/.*"],
     },
+    hmr: {
+      overlay: false,
+    },
     watch: {
-      usePolling: false,
+      // 1. Increase stability threshold to 1 second. 
+      // This tells Vite: "Wait until the file has stopped changing for 1000ms 
+      // before you try to restart the server."
+      awaitWriteFinish: {
+        stabilityThreshold: 1000, 
+        pollInterval: 100,
+      },
+      // 2. Explicitly ignore the config files that are crashing the bootstrapper.
+      // If you change these, you can just manually restart the terminal.
       ignored: [
-        "**/tsconfig*.json",
-        "**/vite.config.ts",
-        "**/*.tsbuildinfo",
+        "**/package.json",
+        "**/tsconfig.json",
+        "**/tsconfig.node.json",
+        "**/.env.local",
         "**/node_modules/**",
         "**/.git/**",
         "**/dist/**",
+        "**/.claude/**",
+        "**/.gemini/**",
+        "**/brain/**",
+        "**/_agents/**",
+        "**/attached_assets/**",
+        "**/*.tsbuildinfo",
       ],
     },
   },

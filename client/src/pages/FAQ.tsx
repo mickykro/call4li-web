@@ -50,12 +50,26 @@ const faqs = [
 ];
 
 const FAQ = () => {
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map((faq) => ({
+      "@type": "Question",
+      "name": faq.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.answer
+      }
+    }))
+  };
+
   return (
     <>
       <SEO
         title="שאלות ותשובות - Call4li"
         description="מצא תשובות לשאלות הנפוצות ביותר על Call4li — איך זה עובד, כמה זה עולה, ואיך להתחיל."
-        canonicalUrl={`${import.meta.env.VITE_DOMAIN_URL || "https://call4li.com"}/faq`}
+        canonicalUrl={`${(import.meta as any).env.VITE_DOMAIN_URL || "https://call4li.com"}/faq`}
+        schema={faqSchema}
       />
       <div className="min-h-screen bg-background text-foreground" dir="rtl">
         {/* Header */}
