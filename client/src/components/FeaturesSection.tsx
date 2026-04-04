@@ -116,9 +116,9 @@ export default function FeaturesSection() {
                 border: `1px solid ${feature.accent}35`,
                 transition: "all 0.4s ease",
               }}
-              initial={{ opacity: 0, scale: 0.88 }}
-              animate={inView ? { opacity: 1, scale: 1 } : {}}
-              transition={{ delay: 0.15 + i * 0.1, duration: 0.6, ease: "easeOut" }}
+              initial={{ opacity: 0, x: i % 2 === 0 ? -60 : 60 }}
+              animate={inView ? { opacity: 1, x: 0 } : {}}
+              transition={{ delay: 0.15 + i * 0.1, duration: 0.7, ease: "easeOut" }}
               whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
             >
               {/* Corner glow — unique per card */}
