@@ -67,11 +67,11 @@ export default function TrustSection() {
                 border: `1px solid ${metric.accent}30`,
                 borderBottom: `2px solid ${metric.accent}60`,
               }}
-              initial={{ opacity: 0, x: i % 2 === 0 ? -50 : 50 }}
-              animate={inView ? { opacity: 1, x: 0 } : {}}
+              initial={{ opacity: 0, x: i % 2 === 0 ? -250 : 250 }}
+              animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: i % 2 === 0 ? -250 : 250 }}
               transition={{
-                delay: i * 0.12,
-                duration: 0.6,
+                delay: i * 0.15,
+                duration: 1.1,
                 ease: "easeOut",
               }}
             >
