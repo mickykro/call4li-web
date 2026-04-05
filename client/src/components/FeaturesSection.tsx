@@ -1,12 +1,12 @@
 /*
  * Features Section — Amber / Gold theme
  * Each card has a unique gradient border color
- * Scale-in staggered animation
+ * Scroll-responsive entrance/exit animations
  * Shimmer sweep on hover
  * Radial mesh background
  */
 
-import { motion, useInView } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 import { Globe, CalendarClock, HelpCircle, Image, Users, FileBarChart } from "lucide-react";
 
@@ -60,7 +60,19 @@ const features = [
 
 export default function FeaturesSection() {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+
+  // Transform scroll progress to animation values for each card
+  const createCardAnimation = (index: number) => {
+    const delay = index * 0.08;
+    const startProgress = Math.max(0, delay - 0.2);
+    const endProgress = Math.min(1, delay + 0.3);
+    
+    return useTransform(scrollYProgress, [startProgress, endProgress], [1, 0]);
+  };
 
   return (
     <section id="features" ref={ref} className="relative py-24 lg:py-36 overflow-hidden">
@@ -78,8 +90,9 @@ export default function FeaturesSection() {
         <motion.div
           className="text-center max-w-3xl mx-auto mb-16"
           initial={{ opacity: 0, y: 30 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
+          whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
+          viewport={{ once: false, margin: "-80px" }}
         >
           <div className="inline-flex items-center gap-2 glass-card px-4 py-1.5 mb-5 border border-amber-400/30">
             <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
@@ -104,47 +117,50 @@ export default function FeaturesSection() {
 
         {/* Bento grid */}
         <div className="grid md:grid-cols-3 gap-5 lg:gap-6">
-          {features.map((feature, i) => (
-            <motion.div
-              key={i}
-              className={`shimmer-hover p-7 lg:p-8 relative overflow-hidden group cursor-default ${feature.span}`}
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-                borderRadius: "1rem",
-                border: `1px solid ${feature.accent}35`,
-                transition: "all 0.4s ease",
-              }}
-              initial={{ opacity: 0, x: i % 2 === 0 ? -300 : 300 }}
-              animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: i % 2 === 0 ? -300 : 300 }}
-              transition={{ delay: 0.15 + i * 0.15, duration: 1.2, ease: "easeOut" }}
-              whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-            >
-              {/* Corner glow — unique per card */}
-              <div
-                className="absolute top-0 right-0 w-40 h-40 rounded-full blur-[70px] opacity-40 group-hover:opacity-70 transition-opacity duration-500 pointer-events-none"
-                style={{ background: `${feature.accent}30` }}
-              />
-
-              {/* Top border line */}
-              <div
-                className="absolute top-0 right-0 left-0 h-[2px]"
-                style={{ background: `linear-gradient(to left, ${feature.accent}, transparent 80%)` }}
-              />
-
-              <div className="relative">
+          {features.map((feature, i) => {
+            const progressOpacity = createCardAnimation(i);
+            
+            return (
+              <motion.div
+                key={i}
+                className={`shimmer-hover p-7 lg:p-8 relative overflow-hidden group cursor-default ${feature.span}`}
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  backdropFilter: "blur(20px)",
+                  WebkitBackdropFilter: "blur(20px)",
+                  borderRadius: "1rem",
+                  border: `1px solid ${feature.accent}35`,
+                  transition: "all 0.4s ease",
+                  x: useTransform(progressOpacity, [0, 1], [i % 2 === 0 ? -300 : 300, 0]),
+                  opacity: useTransform(progressOpacity, [0, 1], [0, 1]),
+                }}
+                whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+              >
+                {/* Corner glow — unique per card */}
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
-                  style={{ background: `${feature.accent}18`, border: `1px solid ${feature.accent}40` }}
-                >
-                  <feature.icon className="w-6 h-6" style={{ color: feature.accent }} />
+                  className="absolute top-0 right-0 w-40 h-40 rounded-full blur-[70px] opacity-40 group-hover:opacity-70 transition-opacity duration-500 pointer-events-none"
+                  style={{ background: `${feature.accent}30` }}
+                />
+
+                {/* Top border line */}
+                <div
+                  className="absolute top-0 right-0 left-0 h-[2px]"
+                  style={{ background: `linear-gradient(to left, ${feature.accent}, transparent 80%)` }}
+                />
+
+                <div className="relative">
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
+                    style={{ background: `${feature.accent}18`, border: `1px solid ${feature.accent}40` }}
+                  >
+                    <feature.icon className="w-6 h-6" style={{ color: feature.accent }} />
+                  </div>
+                  <h3 className="text-lg font-bold text-text-primary mb-3">{feature.title}</h3>
+                  <p className="text-text-secondary text-sm leading-relaxed">{feature.description}</p>
                 </div>
-                <h3 className="text-lg font-bold text-text-primary mb-3">{feature.title}</h3>
-                <p className="text-text-secondary text-sm leading-relaxed">{feature.description}</p>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>
