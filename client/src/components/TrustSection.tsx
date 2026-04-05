@@ -52,12 +52,13 @@ export default function TrustSection() {
   });
 
   // Transform scroll progress to animation values for each card
+  // As scroll progress goes from 0 to 1 (scrolling down), animation goes from 0 to 1 (components come into view)
   const createCardAnimation = (index: number) => {
     const delay = index * 0.1;
     const startProgress = Math.max(0, delay - 0.2);
     const endProgress = Math.min(1, delay + 0.3);
     
-    return useTransform(scrollYProgress, [startProgress, endProgress], [1, 0]);
+    return useTransform(scrollYProgress, [startProgress, endProgress], [0, 1]);
   };
 
   return (

@@ -66,12 +66,13 @@ export default function FeaturesSection() {
   });
 
   // Transform scroll progress to animation values for each card
+  // As scroll progress goes from 0 to 1 (scrolling down), animation goes from 0 to 1 (components come into view)
   const createCardAnimation = (index: number) => {
     const delay = index * 0.08;
     const startProgress = Math.max(0, delay - 0.2);
     const endProgress = Math.min(1, delay + 0.3);
     
-    return useTransform(scrollYProgress, [startProgress, endProgress], [1, 0]);
+    return useTransform(scrollYProgress, [startProgress, endProgress], [0, 1]);
   };
 
   return (
@@ -92,7 +93,7 @@ export default function FeaturesSection() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          viewport={{ once: false, margin: "-80px" }}
+          viewport={{ once: true, margin: "-80px" }}
         >
           <div className="inline-flex items-center gap-2 glass-card px-4 py-1.5 mb-5 border border-amber-400/30">
             <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
