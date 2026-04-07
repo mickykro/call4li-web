@@ -33,7 +33,18 @@ import {
   PhoneMissed,
   PhoneCall,
 } from "lucide-react";
-import type { OnboardingState } from "../../../drizzle/schema";
+// OnboardingState is inferred from the tRPC response
+type OnboardingState =
+  | "NEW"
+  | "AWAITING_004"
+  | "AWAITING_67"
+  | "AWAITING_6762"
+  | "AWAITING_676261"
+  | "ACTIVE_NO_ANSWER"
+  | "ACTIVE_EXTENDED"
+  | "ACTIVE_FULL"
+  | "ACTIVE_COMPLETE"
+  | "FAILED";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
