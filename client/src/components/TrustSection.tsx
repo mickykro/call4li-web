@@ -1,7 +1,7 @@
 /*
  * Trust Section — Each metric gets a completely unique color identity
  * Spinning outer ring decoration on icon containers
- * Scroll-responsive entrance/exit animations
+ * Scroll-responsive entrance/exit animations (hooks-compliant — no hooks in loops)
  * Horizontal scanning band background
  */
 
@@ -15,7 +15,7 @@ const metrics = [
     display: "24/7",
     label: "זמינות מלאה",
     description: "פורלי עובדת סביב השעון, גם כשאתם ישנים",
-    accent: "#38BDF8",  // sky
+    accent: "#38BDF8",
     ringColor: "rgba(56,189,248,0.25)",
   },
   {
@@ -23,7 +23,7 @@ const metrics = [
     display: "3",
     label: "שפות",
     description: "עברית, ערבית ואנגלית — עם זיהוי אוטומטי",
-    accent: "#A78BFA",  // violet
+    accent: "#A78BFA",
     ringColor: "rgba(167,139,250,0.25)",
   },
   {
@@ -31,7 +31,7 @@ const metrics = [
     display: "100%",
     label: "אוטומטי",
     description: "אפס התערבות נדרשת מבעל העסק",
-    accent: "#FB923C",  // orange
+    accent: "#FB923C",
     ringColor: "rgba(251,146,60,0.25)",
   },
   {
@@ -39,27 +39,112 @@ const metrics = [
     display: "30 שניות",
     label: "זמן תגובה",
     description: "מהשיחה שלא נענתה להודעת WhatsApp",
-    accent: "#4ADE80",  // green
+    accent: "#4ADE80",
     ringColor: "rgba(74,222,128,0.25)",
   },
 ];
 
-export default function TrustSection() {
-  const ref = useRef(null);
+// ─── Single metric card with its own scroll tracking ─────────────────────────
+
+function MetricCard({
+  metric,
+  index,
+  sectionRef,
+}: {
+  metric: (typeof metrics)[number];
+  index: number;
+  sectionRef: React.RefObject<HTMLElement | null>;
+}) {
   const { scrollYProgress } = useScroll({
-    target: ref,
+    target: sectionRef,
     offset: ["start end", "end start"],
   });
 
-  // Transform scroll progress to animation values for each card
-  // As scroll progress goes from 0 to 1 (scrolling down), animation goes from 0 to 1 (components come into view)
-  const createCardAnimation = (index: number) => {
-    const delay = index * 0.1;
-    const startProgress = Math.max(0, delay - 0.2);
-    const endProgress = Math.min(1, delay + 0.3);
-    
-    return useTransform(scrollYProgress, [startProgress, endProgress], [0, 1]);
-  };
+  const delay = index * 0.1;
+  const startIn = Math.max(0, delay);
+  const endIn = Math.min(0.6, delay + 0.25);
+  const startOut = Math.max(0.5, delay + 0.35);
+  const endOut = Math.min(1, delay + 0.65);
+
+  const fromX = index % 2 === 0 ? -250 : 250;
+
+  const x = useTransform(
+    scrollYProgress,
+    [0, startIn, endIn, startOut, endOut, 1],
+    [fromX, fromX, 0, 0, fromX * 0.6, fromX * 0.6],
+  );
+
+  const opacity = useTransform(
+    scrollYProgress,
+    [0, startIn, endIn, startOut, endOut, 1],
+    [0, 0, 1, 1, 0, 0],
+  );
+
+  const scale = useTransform(
+    scrollYProgress,
+    [0, startIn, endIn, startOut, endOut, 1],
+    [0.4, 0.4, 1, 1, 0.6, 0.6],
+  );
+
+  return (
+    <motion.div
+      className="glass-card p-6 lg:p-8 text-center relative overflow-hidden"
+      style={{
+        border: `1px solid ${metric.accent}30`,
+        borderBottom: `2px solid ${metric.accent}60`,
+        x,
+        opacity,
+      }}
+    >
+      {/* Corner background glow */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-1/2 pointer-events-none opacity-30"
+        style={{
+          background: `radial-gradient(ellipse at center bottom, ${metric.accent}20, transparent 70%)`,
+        }}
+      />
+
+      {/* Icon with spinning outer ring */}
+      <div className="relative w-14 h-14 mx-auto mb-5">
+        <div
+          className="absolute inset-0 rounded-full animate-spin-slow"
+          style={{
+            background: `conic-gradient(from 0deg, ${metric.accent}60, transparent 60%, ${metric.accent}60)`,
+            borderRadius: "50%",
+            padding: "1px",
+          }}
+        />
+        <div
+          className="absolute inset-[2px] rounded-full flex items-center justify-center"
+          style={{ background: `${metric.accent}18` }}
+        >
+          <metric.icon className="w-6 h-6" style={{ color: metric.accent }} />
+        </div>
+      </div>
+
+      {/* Number — scroll-responsive pop */}
+      <motion.div
+        className="text-3xl lg:text-4xl font-extrabold mb-2"
+        style={{
+          color: metric.accent,
+          fontFamily: "var(--font-display)",
+          scale,
+          opacity,
+        }}
+      >
+        {metric.display}
+      </motion.div>
+
+      <div className="text-text-primary font-semibold text-sm mb-1">{metric.label}</div>
+      <div className="text-text-muted text-xs leading-relaxed">{metric.description}</div>
+    </motion.div>
+  );
+}
+
+// ─── Section ──────────────────────────────────────────────────────────────────
+
+export default function TrustSection() {
+  const ref = useRef<HTMLElement>(null);
 
   return (
     <section ref={ref} className="relative py-20 lg:py-28 overflow-hidden">
@@ -72,66 +157,14 @@ export default function TrustSection() {
 
       <div className="container relative z-10">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6">
-          {metrics.map((metric, i) => {
-            const progressOpacity = createCardAnimation(i);
-            
-            return (
-              <motion.div
-                key={i}
-                className="glass-card p-6 lg:p-8 text-center relative overflow-hidden"
-                style={{
-                  border: `1px solid ${metric.accent}30`,
-                  borderBottom: `2px solid ${metric.accent}60`,
-                  x: useTransform(progressOpacity, [0, 1], [i % 2 === 0 ? -250 : 250, 0]),
-                  opacity: useTransform(progressOpacity, [0, 1], [0, 1]),
-                }}
-              >
-                {/* Corner background glow */}
-                <div
-                  className="absolute bottom-0 left-0 right-0 h-1/2 pointer-events-none opacity-30"
-                  style={{
-                    background: `radial-gradient(ellipse at center bottom, ${metric.accent}20, transparent 70%)`,
-                  }}
-                />
-
-                {/* Icon with spinning outer ring */}
-                <div className="relative w-14 h-14 mx-auto mb-5">
-                  {/* Spinning ring */}
-                  <div
-                    className="absolute inset-0 rounded-full animate-spin-slow"
-                    style={{
-                      background: `conic-gradient(from 0deg, ${metric.accent}60, transparent 60%, ${metric.accent}60)`,
-                      borderRadius: "50%",
-                      padding: "1px",
-                    }}
-                  />
-                  {/* Icon container */}
-                  <div
-                    className="absolute inset-[2px] rounded-full flex items-center justify-center"
-                    style={{ background: `${metric.accent}18` }}
-                  >
-                    <metric.icon className="w-6 h-6" style={{ color: metric.accent }} />
-                  </div>
-                </div>
-
-                {/* Number — scroll-responsive pop */}
-                <motion.div
-                  className="text-3xl lg:text-4xl font-extrabold mb-2"
-                  style={{
-                    color: metric.accent,
-                    fontFamily: "var(--font-display)",
-                    scale: useTransform(progressOpacity, [0, 1], [0.4, 1]),
-                    opacity: useTransform(progressOpacity, [0, 1], [0, 1]),
-                  }}
-                >
-                  {metric.display}
-                </motion.div>
-
-                <div className="text-text-primary font-semibold text-sm mb-1">{metric.label}</div>
-                <div className="text-text-muted text-xs leading-relaxed">{metric.description}</div>
-              </motion.div>
-            );
-          })}
+          {metrics.map((metric, i) => (
+            <MetricCard
+              key={i}
+              metric={metric}
+              index={i}
+              sectionRef={ref}
+            />
+          ))}
         </div>
       </div>
     </section>

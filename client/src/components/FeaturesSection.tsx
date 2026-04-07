@@ -1,7 +1,7 @@
-/*
+/**
  * Features Section — Amber / Gold theme
  * Each card has a unique gradient border color
- * Scroll-responsive entrance/exit animations
+ * Scroll-responsive entrance/exit animations (hooks-compliant)
  * Shimmer sweep on hover
  * Radial mesh background
  */
@@ -12,68 +12,131 @@ import { Globe, CalendarClock, HelpCircle, Image, Users, FileBarChart } from "lu
 
 const FEATURES_BG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663330217393/VZvahsqxvigDNCtzbEoTYw/futuristic-features-bg-T4dw3cKPT6ftzz2AsSQWVh.webp";
 
-// Each card gets a completely unique color identity
 const features = [
   {
     icon: Globe,
     title: "שלוש שפות",
     description: "עברית, ערבית ואנגלית — עם זיהוי שפה אוטומטי. פורלי מתאימה את עצמה ללקוח.",
-    accent: "#F59E0B",   // amber
+    accent: "#F59E0B",
     span: "md:col-span-2",
   },
   {
     icon: CalendarClock,
     title: "קביעת שיחות חוזרות",
     description: '"מחר ב-8", "בין 4 ל-6", "בשבוע הבא אחה״צ" — פורלי מבינה הכל ושולחת תזכורת 30 דקות לפני.',
-    accent: "#A78BFA",   // violet-400
+    accent: "#A78BFA",
     span: "md:col-span-1",
   },
   {
     icon: HelpCircle,
     title: "מענה על שאלות",
     description: "בהתבסס על FAQ, מוצרים ושירותים שהעסק הגדיר — פורלי עונה בצורה חכמה ומדויקת.",
-    accent: "#34D399",   // emerald
+    accent: "#34D399",
     span: "md:col-span-1",
   },
   {
     icon: Image,
     title: "ניתוח תמונות ומסמכים",
     description: "לקוח שולח תמונה או מסמך? פורלי מנתחת ומבינה את התוכן כדי לתת מענה מדויק.",
-    accent: "#F97316",   // orange
+    accent: "#F97316",
     span: "md:col-span-2",
   },
   {
     icon: Users,
     title: "זיהוי לקוחות חוזרים",
     description: "פורלי מזהה לקוחות חוזרים ועסקים מרובים מאותו מספר — ומתאימה את השיחה בהתאם.",
-    accent: "#38BDF8",   // sky
+    accent: "#38BDF8",
     span: "md:col-span-1",
   },
   {
     icon: FileBarChart,
     title: "סיכום שיחה אוטומטי",
     description: "סיכום מלא נשלח לעסק וגם ללקוח עצמו — שקיפות מלאה, אפס מאמץ.",
-    accent: "#FB7185",   // rose
+    accent: "#FB7185",
     span: "md:col-span-2",
   },
 ];
 
-export default function FeaturesSection() {
-  const ref = useRef(null);
+// ─── Single card with its own scroll tracking ─────────────────────────────────
+
+function FeatureCard({
+  feature,
+  index,
+  sectionRef,
+}: {
+  feature: (typeof features)[number];
+  index: number;
+  sectionRef: React.RefObject<HTMLElement | null>;
+}) {
   const { scrollYProgress } = useScroll({
-    target: ref,
+    target: sectionRef,
     offset: ["start end", "end start"],
   });
 
-  // Transform scroll progress to animation values for each card
-  // As scroll progress goes from 0 to 1 (scrolling down), animation goes from 0 to 1 (components come into view)
-  const createCardAnimation = (index: number) => {
-    const delay = index * 0.08;
-    const startProgress = Math.max(0, delay - 0.2);
-    const endProgress = Math.min(1, delay + 0.3);
-    
-    return useTransform(scrollYProgress, [startProgress, endProgress], [0, 1]);
-  };
+  const delay = index * 0.08;
+  const startIn = Math.max(0, delay);
+  const endIn = Math.min(0.6, delay + 0.25);
+  const startOut = Math.max(0.5, delay + 0.35);
+  const endOut = Math.min(1, delay + 0.65);
+
+  const fromX = index % 2 === 0 ? -300 : 300;
+
+  const x = useTransform(
+    scrollYProgress,
+    [0, startIn, endIn, startOut, endOut, 1],
+    [fromX, fromX, 0, 0, fromX * 0.6, fromX * 0.6],
+  );
+
+  const opacity = useTransform(
+    scrollYProgress,
+    [0, startIn, endIn, startOut, endOut, 1],
+    [0, 0, 1, 1, 0, 0],
+  );
+
+  return (
+    <motion.div
+      className={`shimmer-hover p-7 lg:p-8 relative overflow-hidden group cursor-default ${feature.span}`}
+      style={{
+        background: "rgba(255,255,255,0.04)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        borderRadius: "1rem",
+        border: `1px solid ${feature.accent}35`,
+        x,
+        opacity,
+      }}
+      whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+    >
+      {/* Corner glow */}
+      <div
+        className="absolute top-0 right-0 w-40 h-40 rounded-full blur-[70px] opacity-40 group-hover:opacity-70 transition-opacity duration-500 pointer-events-none"
+        style={{ background: `${feature.accent}30` }}
+      />
+
+      {/* Top border line */}
+      <div
+        className="absolute top-0 right-0 left-0 h-[2px]"
+        style={{ background: `linear-gradient(to left, ${feature.accent}, transparent 80%)` }}
+      />
+
+      <div className="relative">
+        <div
+          className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
+          style={{ background: `${feature.accent}18`, border: `1px solid ${feature.accent}40` }}
+        >
+          <feature.icon className="w-6 h-6" style={{ color: feature.accent }} />
+        </div>
+        <h3 className="text-lg font-bold text-text-primary mb-3">{feature.title}</h3>
+        <p className="text-text-secondary text-sm leading-relaxed">{feature.description}</p>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Section ──────────────────────────────────────────────────────────────────
+
+export default function FeaturesSection() {
+  const ref = useRef<HTMLElement>(null);
 
   return (
     <section id="features" ref={ref} className="relative py-24 lg:py-36 overflow-hidden">
@@ -118,50 +181,14 @@ export default function FeaturesSection() {
 
         {/* Bento grid */}
         <div className="grid md:grid-cols-3 gap-5 lg:gap-6">
-          {features.map((feature, i) => {
-            const progressOpacity = createCardAnimation(i);
-            
-            return (
-              <motion.div
-                key={i}
-                className={`shimmer-hover p-7 lg:p-8 relative overflow-hidden group cursor-default ${feature.span}`}
-                style={{
-                  background: "rgba(255,255,255,0.04)",
-                  backdropFilter: "blur(20px)",
-                  WebkitBackdropFilter: "blur(20px)",
-                  borderRadius: "1rem",
-                  border: `1px solid ${feature.accent}35`,
-                  transition: "all 0.4s ease",
-                  x: useTransform(progressOpacity, [0, 1], [i % 2 === 0 ? -300 : 300, 0]),
-                  opacity: useTransform(progressOpacity, [0, 1], [0, 1]),
-                }}
-                whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-              >
-                {/* Corner glow — unique per card */}
-                <div
-                  className="absolute top-0 right-0 w-40 h-40 rounded-full blur-[70px] opacity-40 group-hover:opacity-70 transition-opacity duration-500 pointer-events-none"
-                  style={{ background: `${feature.accent}30` }}
-                />
-
-                {/* Top border line */}
-                <div
-                  className="absolute top-0 right-0 left-0 h-[2px]"
-                  style={{ background: `linear-gradient(to left, ${feature.accent}, transparent 80%)` }}
-                />
-
-                <div className="relative">
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
-                    style={{ background: `${feature.accent}18`, border: `1px solid ${feature.accent}40` }}
-                  >
-                    <feature.icon className="w-6 h-6" style={{ color: feature.accent }} />
-                  </div>
-                  <h3 className="text-lg font-bold text-text-primary mb-3">{feature.title}</h3>
-                  <p className="text-text-secondary text-sm leading-relaxed">{feature.description}</p>
-                </div>
-              </motion.div>
-            );
-          })}
+          {features.map((feature, i) => (
+            <FeatureCard
+              key={i}
+              feature={feature}
+              index={i}
+              sectionRef={ref}
+            />
+          ))}
         </div>
       </div>
     </section>
