@@ -1,31 +1,16 @@
-/**
- * Onboard page — /onboard/:client_id
- *
- * State-driven UI for the call forwarding activation flow:
- *
- *  NEW              → Step 1: Tap to dial **004*
- *  FAILED           → Fallback: 3 tap-to-call buttons (**67, **62, **61)
- *  ACTIVE_NO_ANSWER → Partial success — nudge to complete **62 + **61
- *  ACTIVE_EXTENDED  → Almost done — nudge to complete **61
- *  ACTIVE_FULL /
- *  ACTIVE_COMPLETE  → 🎉 Full success screen
- *
- *  Validation happens in the background (n8n). No polling or awaiting states.
- */
-
 import { useState } from "react";
 import { useParams } from "wouter";
+import { Button } from "@/components/ui/button";
+import SEO from "@/components/SEO";
+import { WavyBackground } from "@/components/ui/wavy-background";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import SEO from "@/components/SEO";
 import {
   Phone,
   CheckCircle2,
   AlertCircle,
   Loader2,
-  ChevronLeft,
   ShieldCheck,
   PhoneOff,
   PhoneMissed,
@@ -64,7 +49,6 @@ const FALLBACK_STEPS: FallbackStep[] = [
     consequence: "ללא קוד זה פורלי לא תוכל לענות על שיחות שלא נענו",
     icon: PhoneMissed,
     color: "#4AEADC",
-    awaitingState: "AWAITING_67",
   },
   {
     code: "62",
@@ -73,7 +57,6 @@ const FALLBACK_STEPS: FallbackStep[] = [
     consequence: "ללא קוד זה לקוחות יקבלו שגיאה כשאתה לא מחובר",
     icon: PhoneOff,
     color: "#A78BFA",
-    awaitingState: "AWAITING_6762",
   },
   {
     code: "61",
@@ -82,7 +65,6 @@ const FALLBACK_STEPS: FallbackStep[] = [
     consequence: "ללא קוד זה לקוחות שמתקשרים כשאתה בשיחה לא יגיעו לפורלי",
     icon: PhoneCall,
     color: "#FB923C",
-    awaitingState: "AWAITING_676261",
   },
 ];
 
@@ -163,22 +145,14 @@ function ActivateScreen({
         />
 
         <div>
-          <h2 className="text-2xl font-extrabold text-text-primary mb-2">
+          <h2 className="text-2xl font-extrabold text-secondary mb-2">
             הפעלת פורלי
           </h2>
-          <p className="text-text-secondary text-sm leading-relaxed max-w-xs">
+          <p className="text-black text-sm leading-relaxed max-w-xs">
             לחץ על הכפתור למטה כדי להפעיל את העברת השיחות. הטלפון שלך יפתח את
             החייגן עם הקוד המוכן — פשוט לחץ על חייג.
           </p>
         </div>
-
-        {/* Code preview */}
-        <div className="glass-card px-6 py-3 border border-teal-400/30 rounded-xl">
-          <span className="text-teal-400 font-mono text-lg font-bold tracking-widest">
-            **004*{forliNumber.replace(/\D/g, "")}#
-          </span>
-        </div>
-
         {/* CTA */}
         <a href={telLink} onClick={onActivate} className="w-full max-w-xs">
           <Button
@@ -195,7 +169,7 @@ function ActivateScreen({
           </Button>
         </a>
 
-        <p className="text-text-muted text-xs max-w-xs">
+        <p className="text-black text-xs max-w-xs">
           לאחר הלחיצה, הטלפון יחייג אוטומטית. השיחה תסתיים תוך שנייה — זה
           תקין.
         </p>
@@ -609,57 +583,19 @@ export default function Onboard() {
         description="הפעלת העברת שיחות אוטומטית לשירות פורלי."
         noIndex={true}
       />
-      <div
-        className="min-h-screen bg-deep-space text-text-primary flex flex-col"
-        dir="rtl"
-      >
-        {/* Header */}
-        <header className="flex items-center justify-between px-5 py-4 border-b border-white/8">
-          <div className="flex items-center gap-2">
-            <img
-              src={FORLI_MASCOT}
-              alt="פורלי"
-              className="h-8 w-8 object-contain rounded-full"
-            />
-            <span className="font-bold text-text-primary text-sm">פורלי</span>
-          </div>
-          <a
-            href="/"
-            className="flex items-center gap-1 text-text-muted text-xs hover:text-text-secondary transition-colors"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-            חזרה לאתר
-          </a>
-        </header>
-
-        {/* Main */}
-        <main className="flex-1 flex flex-col items-center justify-center px-5 py-8">
-          <div className="w-full max-w-sm">
+      <WavyBackground containerClassName="min-h-screen" className="w-full flex flex-col text-gray-900" dir="rtl">
+        <div className="flex-1 flex flex-col items-center justify-center px-5 py-8">
+          <div className="w-full max-w-sm bg-white/50 backdrop-blur-md rounded-2xl border border-border/20 shadow-2xl p-6">
             {status?.name && (
-              <p className="text-center text-text-muted text-xs mb-6">
+              <p className="text-center text-gray-500 text-xs mb-6">
                 הגדרת פורלי עבור{" "}
-                <span className="text-text-secondary font-semibold">
-                  {status.name}
-                </span>
+                <span className="text-gray-900 font-semibold">{status.name}</span>
               </p>
             )}
             <AnimatePresence mode="wait">{renderContent()}</AnimatePresence>
           </div>
-        </main>
-
-        {/* Footer */}
-        <footer className="px-5 py-4 text-center">
-          <p className="text-text-muted text-xs">
-            נתקלת בבעיה?{" "}
-            <a
-              href="https://wa.me/972535972420"
-              className="text-teal-400 underline underline-offset-2"
-            >
-              צור קשר עם התמיכה
-            </a>
-          </p>
-        </footer>
-      </div>
+        </div>
+      </WavyBackground>
     </>
   );
 }
