@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { logOnboardingEvent } from "@/services/onboardingIntegration";
 import forliMascot from "@/assets/forli_no_bg_silver.png";
 import SEO from "@/components/SEO";
+import { WavyBackground } from "@/components/ui/wavy-background";
 
 interface Carrier {
   name: string;
@@ -88,7 +89,7 @@ const Onboard = () => {
         description="הפעלת העברת שיחות אוטומטית לשירות Call4li."
         noIndex={true}
       />
-      <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
+      <WavyBackground className="w-full max-w-md p-4" containerClassName="min-h-screen" dir="rtl">
         <Card className="w-full max-w-md border-border/20 shadow-2xl">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
@@ -142,7 +143,7 @@ const Onboard = () => {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
+      </WavyBackground>
     </>
   );
 };
