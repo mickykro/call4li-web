@@ -1,28 +1,127 @@
 /**
  * Onboarding router — handles the call forwarding activation flow.
  *
+ * Data source: Google Sheets ("leads" sheet in "Call4li automation").
+ * All state writes are performed by n8n after Twilio verification.
+ * This router is READ + TRIGGER only:
+ *   - getStatus  → reads business row from Sheets
+ *   - activate   → triggers n8n webhook to place the Twilio test call
+ *
  * Procedures:
- *  getStatus       - get current onboarding state for a business
- *  activate        - mark that user dialed a code; triggers n8n to place test call
- *  verifyCallback  - called by n8n webhook when test call result is known
- *  setCarrier      - save carrier info and whether 004 is blocked
+ *  getStatus  - get current onboarding state for a business (from Sheets)
+ *  activate   - user tapped "Activate"; triggers n8n to place test call
  */
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, router } from "../_core/trpc";
-import {
-  getBusinessByClientId,
-  updateBusinessOnboardingState,
-  upsertBusiness,
-  createOnboardingAttempt,
-  countOnboardingAttempts,
-} from "../db";
-import type { OnboardingState } from "../../drizzle/schema";
+import { getBusinessByClientId } from "../sheets";
 
-const MAX_ATTEMPTS = 6; // rate limit per business
+export const onboardingRouter = router({
+  /** Get the current onboarding state for a business (reads from Google Sheets) */
+  getStatus: publicProcedure
+    .input(z.object({ clientId: z.string().min(1) }))
+    .query(async ({ input }) => {
+      let business;
+      try {
+        business = await getBusinessByClientId(input.clientId);
+      } catch (err) {
+        console.error("[Onboarding] Failed to read Sheets:", err);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "שגיאה בטעינת הנתונים. אנא נסה שוב.",
+        });
+      }
 
-/** Determine the next AWAITING state based on which code was just dialed */
+      if (!business) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "הקישור אינו תקין. אנא צור קשר עם התמיכה.",
+        });
+      }
+
+      return {
+        clientId: business.businessId,
+        name: business.name,
+        businessName: business.businessName,
+        phoneNumber: business.phone,
+        forliNumber: business.forliNumber,
+        state: business.onboardingState,
+        signupStep: business.signupStep,
+        stepMessage: business.stepMessage,
+        // Derive verifiedCodes from state for the UI
+        verifiedCodes: deriveVerifiedCodes(business.onboardingState),
+      };
+    }),
+
+  /**
+   * Called when the user taps "Activate" and is about to dial a code.
+   * Fires a webhook to n8n which will:
+   *   1. Wait 10 seconds
+   *   2. Place a Twilio test call to the user's number
+   *   3. Detect if the call was forwarded
+   *   4. Update the sheet status accordingly
+   *   5. Send a WhatsApp success/fail message
+   */
+  activate: publicProcedure
+    .input(
+      z.object({
+        clientId: z.string().min(1),
+        code: z.enum(["004", "67", "62", "61"]),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      let business;
+      try {
+        business = await getBusinessByClientId(input.clientId);
+      } catch (err) {
+        console.error("[Onboarding] Failed to read Sheets:", err);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "שגיאה בטעינת הנתונים. אנא נסה שוב.",
+        });
+      }
+
+      if (!business) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "הקישור אינו תקין.",
+        });
+      }
+
+      // Notify n8n to start the verification flow (fire and forget)
+      const n8nWebhookUrl = process.env.N8N_ONBOARDING_WEBHOOK_URL;
+      if (n8nWebhookUrl) {
+        fetch(n8nWebhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            event: "activation_triggered",
+            client_id: input.clientId,
+            phone_number: business.phone,
+            forli_number: business.forliNumber,
+            code_dialed: input.code,
+            timestamp: new Date().toISOString(),
+          }),
+        }).catch(err =>
+          console.error("[Onboarding] Failed to notify n8n:", err),
+        );
+      } else {
+        console.warn(
+          "[Onboarding] N8N_ONBOARDING_WEBHOOK_URL not set — skipping test call trigger",
+        );
+      }
+
+      // Return the expected next state so the UI can optimistically show "Awaiting verification"
+      const nextState = awaitingStateForCode(input.code);
+      return { success: true, state: nextState };
+    }),
+});
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+import type { OnboardingState } from "../sheets";
+
 function awaitingStateForCode(code: "004" | "67" | "62" | "61"): OnboardingState {
   const map: Record<string, OnboardingState> = {
     "004": "AWAITING_004",
@@ -33,163 +132,18 @@ function awaitingStateForCode(code: "004" | "67" | "62" | "61"): OnboardingState
   return map[code];
 }
 
-/** Determine the new ACTIVE state after a code is verified */
-function activeStateAfterVerification(
-  currentVerified: string[],
-  newCode: string,
-): OnboardingState {
-  const verified = [...new Set([...currentVerified, newCode])];
-  if (verified.includes("004")) return "ACTIVE_FULL";
-  const has67 = verified.includes("67");
-  const has62 = verified.includes("62");
-  const has61 = verified.includes("61");
-  if (has67 && has62 && has61) return "ACTIVE_COMPLETE";
-  if (has67 && has62) return "ACTIVE_EXTENDED";
-  if (has67) return "ACTIVE_NO_ANSWER";
-  return "FAILED";
+/** Derive which codes have been verified from the current state */
+function deriveVerifiedCodes(state: OnboardingState): string[] {
+  switch (state) {
+    case "ACTIVE_NO_ANSWER":
+      return ["67"];
+    case "ACTIVE_EXTENDED":
+      return ["67", "62"];
+    case "ACTIVE_FULL":
+      return ["004"];
+    case "ACTIVE_COMPLETE":
+      return ["67", "62", "61"];
+    default:
+      return [];
+  }
 }
-
-export const onboardingRouter = router({
-  /** Get the current onboarding state for a business */
-  getStatus: publicProcedure
-    .input(z.object({ clientId: z.string() }))
-    .query(async ({ input }) => {
-      const business = await getBusinessByClientId(input.clientId);
-      if (!business) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Business not found" });
-      }
-      return {
-        clientId: business.clientId,
-        name: business.name,
-        phoneNumber: business.phoneNumber,
-        forliNumber: business.forliNumber,
-        state: business.onboardingState,
-        verifiedCodes: (business.verifiedCodes as string[]) ?? [],
-        carrier: business.carrier,
-        carrierBlocks004: business.carrierBlocks004,
-        onboardingStartedAt: business.onboardingStartedAt,
-        onboardingCompletedAt: business.onboardingCompletedAt,
-      };
-    }),
-
-  /** Called when the user taps "Activate" and dials a code */
-  activate: publicProcedure
-    .input(
-      z.object({
-        clientId: z.string(),
-        code: z.enum(["004", "67", "62", "61"]),
-      }),
-    )
-    .mutation(async ({ input }) => {
-      const business = await getBusinessByClientId(input.clientId);
-      if (!business) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Business not found" });
-      }
-
-      // Rate limit
-      const attempts = await countOnboardingAttempts(business.id);
-      if (attempts >= MAX_ATTEMPTS) {
-        throw new TRPCError({
-          code: "TOO_MANY_REQUESTS",
-          message: "יותר מדי ניסיונות. אנא צור קשר עם התמיכה.",
-        });
-      }
-
-      // Update state to AWAITING
-      const newState = awaitingStateForCode(input.code);
-      await updateBusinessOnboardingState(input.clientId, newState);
-
-      // Create attempt record
-      await createOnboardingAttempt({
-        businessId: business.id,
-        codeAttempted: input.code,
-        result: "pending",
-      });
-
-      // Notify n8n to place the test call (fire and forget)
-      const n8nWebhookUrl = process.env.N8N_ONBOARDING_WEBHOOK_URL;
-      if (n8nWebhookUrl && business.phoneNumber) {
-        fetch(n8nWebhookUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            event: "activation_triggered",
-            client_id: input.clientId,
-            phone_number: business.phoneNumber,
-            forli_number: business.forliNumber,
-            code_dialed: input.code,
-            timestamp: new Date().toISOString(),
-          }),
-        }).catch(err => console.error("[Onboarding] Failed to notify n8n:", err));
-      }
-
-      return { success: true, state: newState };
-    }),
-
-  /** Called by n8n webhook when verification result is known */
-  verifyCallback: publicProcedure
-    .input(
-      z.object({
-        clientId: z.string(),
-        code: z.string(),
-        success: z.boolean(),
-        twilioCallSid: z.string().optional(),
-      }),
-    )
-    .mutation(async ({ input }) => {
-      const business = await getBusinessByClientId(input.clientId);
-      if (!business) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Business not found" });
-      }
-
-      const currentVerified = (business.verifiedCodes as string[]) ?? [];
-
-      if (input.success) {
-        const newVerified = [...new Set([...currentVerified, input.code])];
-        const newState = activeStateAfterVerification(currentVerified, input.code);
-        const isComplete = ["ACTIVE_FULL", "ACTIVE_COMPLETE"].includes(newState);
-        await updateBusinessOnboardingState(
-          input.clientId,
-          newState,
-          newVerified,
-          isComplete ? new Date() : undefined,
-        );
-        return { success: true, state: newState, verifiedCodes: newVerified };
-      } else {
-        // Verification failed — move to FAILED only if no codes verified yet
-        if (currentVerified.length === 0) {
-          await updateBusinessOnboardingState(input.clientId, "FAILED");
-          return { success: false, state: "FAILED" as OnboardingState, verifiedCodes: [] };
-        }
-        // Already has some codes — keep current active state
-        return {
-          success: false,
-          state: business.onboardingState,
-          verifiedCodes: currentVerified,
-        };
-      }
-    }),
-
-  /** Save carrier info */
-  setCarrier: publicProcedure
-    .input(
-      z.object({
-        clientId: z.string(),
-        carrier: z.string(),
-        carrierBlocks004: z.boolean(),
-      }),
-    )
-    .mutation(async ({ input }) => {
-      const business = await getBusinessByClientId(input.clientId);
-      if (!business) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Business not found" });
-      }
-      await upsertBusiness({
-        ...business,
-        carrier: input.carrier,
-        carrierBlocks004: input.carrierBlocks004,
-        verifiedCodes: (business.verifiedCodes as string[]) ?? [],
-      });
-      return { success: true };
-    }),
-});
