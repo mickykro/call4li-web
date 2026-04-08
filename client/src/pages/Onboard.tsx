@@ -98,7 +98,7 @@ const Onboard = () => {
             <CardTitle className="text-2xl font-bold text-primary">
               הפעלת Follow-Me לשיחות שלא נענו
             </CardTitle>
-            <CardDescription className="text-base text-black/80">
+            <CardDescription className="text-base text-black/80 font-bold text-md">
               בלחיצה על הכפתור, הפלאפון שלך יגדיר העברת שיחות אוטומטית למספר Call4li.
             </CardDescription>
           </CardHeader>

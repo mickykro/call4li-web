@@ -79,10 +79,10 @@ export const WavyBackground = ({
     const isMobile = window.innerWidth < 768;
     for (i = 0; i < n; i++) {
       ctx.beginPath();
-      ctx.lineWidth = waveWidth || (isMobile ? 10 : 50);
+      ctx.lineWidth = waveWidth || (isMobile ? 20 : 30);
       ctx.strokeStyle = waveColors[i % waveColors.length];
       for (x = 0; x < w; x += 5) {
-        var waveHeight = isMobile ? 2.2 : 1;
+        var waveHeight = isMobile ? 1.7 : 1;
         var y = noise(x / 800, 0.5 * i, ntRef.current) * waveHeight * 100;
         ctx.lineTo(x, y + h * 0.2 + i * 10 + (x / w) * h * 0.53); // Added i * 20 for space between lines
       }
