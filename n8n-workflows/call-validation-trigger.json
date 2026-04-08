@@ -1,0 +1,435 @@
+{
+  "name": "Forli - Call Validation Trigger",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Forli - Call Validation Trigger\n\n**Trigger:** New row in Businesses sheet with status = AWAITING_VERIFICATION (or any new row)\n\n**Flow:**\n1. Google Sheets trigger detects new row\n2. Wait 10 seconds (carrier processes **004*)\n3. Place Twilio test call to user's phone\n4. Wait up to 30s for forwarding detection webhook\n5. Send result to landing page webhook (which sends WhatsApp via Green API)\n6. Update Businesses sheet with result status\n\n**Endpoints used:**\n- `POST /api/twilio/call-status` — landing page webhook (sends WhatsApp)\n- `POST /api/twilio/incoming` — Twilio calls this when test call is forwarded\n\n**Required credentials:**\n- Twilio: Account SID + Auth Token\n- Google Sheets: OAuth2\n- Landing page URL: set in HTTP Request nodes",
+        "height": 280,
+        "width": 520,
+        "color": 7
+      },
+      "id": "sticky-note-1",
+      "name": "Sticky Note - Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-200, -300]
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "19jGS3sxCpS2333iCgddqWWXVq0l-paO7noHUeHqvhPA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Businesses",
+          "mode": "name"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "id": "trigger-sheets",
+      "name": "Google Sheets - New Business Row",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 4,
+      "position": [0, 0],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "google-sheets-cred",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "status-check",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "AWAITING_VERIFICATION",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "filter-status",
+      "name": "Filter - Status is AWAITING_VERIFICATION",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [220, 0],
+      "notes": "Only process rows where status = AWAITING_VERIFICATION. n8n's Onboarding workflow sets this when user clicks Activate."
+    },
+    {
+      "parameters": {
+        "amount": 10,
+        "unit": "seconds"
+      },
+      "id": "wait-10s",
+      "name": "Wait 10 Seconds",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [440, 0],
+      "webhookId": "wait-10s-webhook"
+    },
+    {
+      "parameters": {
+        "operation": "makeCall",
+        "from": "+972765996026",
+        "to": "={{ '+' + $('Google Sheets - New Business Row').item.json.phone_number.replace(/^0/, '972').replace(/^\\+/, '') }}",
+        "options": {
+          "statusCallback": "={{ $env.LANDING_PAGE_URL }}/api/twilio/incoming",
+          "statusCallbackMethod": "POST",
+          "statusCallbackEvent": ["initiated", "ringing", "answered", "completed"],
+          "timeout": 30,
+          "url": "https://handler.twilio.com/twiml/EH00000000000000000000000000000000"
+        }
+      },
+      "id": "twilio-call",
+      "name": "Twilio - Place Test Call",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [660, 0],
+      "credentials": {
+        "twilioApi": {
+          "id": "twilio-cred",
+          "name": "Twilio account"
+        }
+      },
+      "notes": "Places a test call from Forli's Twilio number to the user's phone. If **004* was dialed, the call will be forwarded to Forli's number and detected by /api/twilio/incoming."
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "options": {
+          "webhookSuffix": "call-forwarding-detected"
+        },
+        "amount": 30,
+        "unit": "seconds"
+      },
+      "id": "wait-for-webhook",
+      "name": "Wait for Forwarding Detection (30s)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [880, 0],
+      "webhookId": "call-forwarding-detected",
+      "notes": "Waits up to 30 seconds for the landing page to call back via /api/twilio/incoming. If no callback arrives within 30s, assumes forwarding failed."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "id": "forwarded-check",
+              "leftValue": "={{ $json.event }}",
+              "rightValue": "call_forwarded",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-forwarded",
+      "name": "Was Call Forwarded?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1100, 0]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "19jGS3sxCpS2333iCgddqWWXVq0l-paO7noHUeHqvhPA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Businesses",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "business_id": "={{ $('Google Sheets - New Business Row').item.json.business_id }}",
+            "status": "ACTIVE_FULL",
+            "updated_at": "={{ new Date().toISOString() }}"
+          },
+          "matchingColumns": ["business_id"],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "update-success",
+      "name": "Update Sheet - ACTIVE_FULL",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1320, -120],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "google-sheets-cred",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "19jGS3sxCpS2333iCgddqWWXVq0l-paO7noHUeHqvhPA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Businesses",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "business_id": "={{ $('Google Sheets - New Business Row').item.json.business_id }}",
+            "status": "FAILED",
+            "updated_at": "={{ new Date().toISOString() }}"
+          },
+          "matchingColumns": ["business_id"],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "update-failed",
+      "name": "Update Sheet - FAILED",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1320, 120],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "google-sheets-cred",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.LANDING_PAGE_URL }}/api/twilio/call-status",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "={{ $('Google Sheets - New Business Row').item.json.business_id }}"
+            },
+            {
+              "name": "phone_number",
+              "value": "={{ $('Google Sheets - New Business Row').item.json.phone_number }}"
+            },
+            {
+              "name": "business_name",
+              "value": "={{ $('Google Sheets - New Business Row').item.json.business_name }}"
+            },
+            {
+              "name": "call_sid",
+              "value": "={{ $('Twilio - Place Test Call').item.json.sid }}"
+            },
+            {
+              "name": "success",
+              "value": true
+            },
+            {
+              "name": "code_dialed",
+              "value": "004"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "notify-success",
+      "name": "Notify Landing Page - Success",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1540, -120],
+      "notes": "Sends success result to landing page. Landing page sends WhatsApp via Green API."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.LANDING_PAGE_URL }}/api/twilio/call-status",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "={{ $('Google Sheets - New Business Row').item.json.business_id }}"
+            },
+            {
+              "name": "phone_number",
+              "value": "={{ $('Google Sheets - New Business Row').item.json.phone_number }}"
+            },
+            {
+              "name": "business_name",
+              "value": "={{ $('Google Sheets - New Business Row').item.json.business_name }}"
+            },
+            {
+              "name": "call_sid",
+              "value": "={{ $('Twilio - Place Test Call').item.json.sid }}"
+            },
+            {
+              "name": "success",
+              "value": false
+            },
+            {
+              "name": "code_dialed",
+              "value": "004"
+            },
+            {
+              "name": "fallback_url",
+              "value": "={{ $env.LANDING_PAGE_URL }}/onboard/{{ $('Google Sheets - New Business Row').item.json.business_id }}?fallback=true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "notify-failed",
+      "name": "Notify Landing Page - Failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1540, 120],
+      "notes": "Sends failure result to landing page. Landing page sends WhatsApp with fallback link via Green API."
+    }
+  ],
+  "connections": {
+    "Google Sheets - New Business Row": {
+      "main": [
+        [
+          {
+            "node": "Filter - Status is AWAITING_VERIFICATION",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter - Status is AWAITING_VERIFICATION": {
+      "main": [
+        [
+          {
+            "node": "Wait 10 Seconds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 10 Seconds": {
+      "main": [
+        [
+          {
+            "node": "Twilio - Place Test Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio - Place Test Call": {
+      "main": [
+        [
+          {
+            "node": "Wait for Forwarding Detection (30s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Forwarding Detection (30s)": {
+      "main": [
+        [
+          {
+            "node": "Was Call Forwarded?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Was Call Forwarded?": {
+      "main": [
+        [
+          {
+            "node": "Update Sheet - ACTIVE_FULL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Sheet - FAILED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Sheet - ACTIVE_FULL": {
+      "main": [
+        [
+          {
+            "node": "Notify Landing Page - Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Sheet - FAILED": {
+      "main": [
+        [
+          {
+            "node": "Notify Landing Page - Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": ["forli", "onboarding", "twilio"],
+  "triggerCount": 1,
+  "updatedAt": "2026-04-08T00:00:00.000Z",
+  "versionId": "1"
+}
