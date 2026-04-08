@@ -11,7 +11,7 @@ export const WavyBackground = ({
   waveWidth,
   backgroundFill,
   blur = 10,
-  speed = "fast",
+  speed = "slow",
   waveOpacity = 0.5,
   ...props
 }: {
@@ -29,18 +29,20 @@ export const WavyBackground = ({
   const noise = createNoise3D();
   let w: number,
     h: number,
-    nt: number,
     i: number,
     x: number,
     ctx: any,
     canvas: any;
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const lastTimeRef = useRef<number>(0);
+  const ntRef = useRef<number>(0);
+
   const getSpeed = () => {
     switch (speed) {
       case "slow":
-        return 0.001;
+        return 0.0001;
       case "fast":
-        return 0.002;
+        return 0.0009;
       default:
         return 0.001;
     }
@@ -51,14 +53,15 @@ export const WavyBackground = ({
     ctx = canvas.getContext("2d");
     w = ctx.canvas.width = window.innerWidth;
     h = ctx.canvas.height = window.innerHeight;
-    ctx.filter = `blur(${blur}px)`;
-    nt = 0;
+    ctx.filter = `blur(${5}px)`;
+    ntRef.current = 0;
+    lastTimeRef.current = performance.now();
     window.onresize = function () {
       w = ctx.canvas.width = window.innerWidth;
       h = ctx.canvas.height = window.innerHeight;
-      ctx.filter = `blur(${blur}px)`;
+      ctx.filter = `blur(${5}px)`;
     };
-    render();
+    render(performance.now());
   };
 
   const waveColors = colors ?? [
@@ -68,15 +71,20 @@ export const WavyBackground = ({
     "#e879f9",
     "#22d3ee",
   ];
-  const drawWave = (n: number) => {
-    nt += getSpeed();
+
+  const drawWave = (n: number, delta: number) => {
+    const speedMultiplier = getSpeed();
+    ntRef.current += delta * speedMultiplier;
+
+    const isMobile = window.innerWidth < 768;
     for (i = 0; i < n; i++) {
       ctx.beginPath();
-      ctx.lineWidth = waveWidth || 50;
+      ctx.lineWidth = waveWidth || (isMobile ? 10 : 50);
       ctx.strokeStyle = waveColors[i % waveColors.length];
       for (x = 0; x < w; x += 5) {
-        var y = noise(x / 800, 0.3 * i, nt) * 100;
-        ctx.lineTo(x, y + h * 0.5 + (x / w) * h * 0.3); // diagonal slope: drops 30% of height across the width
+        var waveHeight = isMobile ? 2.2 : 1;
+        var y = noise(x / 800, 0.5 * i, ntRef.current) * waveHeight * 100;
+        ctx.lineTo(x, y + h * 0.2 + i * 10 + (x / w) * h * 0.53); // Added i * 20 for space between lines
       }
       ctx.stroke();
       ctx.closePath();
@@ -84,11 +92,21 @@ export const WavyBackground = ({
   };
 
   let animationId: number;
-  const render = () => {
-    ctx.fillStyle = backgroundFill || "black";
+  const render = (currentTime: number) => {
+    const delta = currentTime - lastTimeRef.current;
+    lastTimeRef.current = currentTime;
+
+    const isMobile = window.innerWidth < 768;
+    const gradient = ctx.createLinearGradient(100, 500, w, h);
+    gradient.addColorStop(0, "#090909ff");     // soft white-blue
+    gradient.addColorStop(0.3, "#00304aff");   // light sky blue
+    gradient.addColorStop(0.5, "#022e19ff");   // light emerald/green
+    gradient.addColorStop(0.7, "#000000ff");   // light pink
+    gradient.addColorStop(1, "#001245ff");     // soft white-blue
+    ctx.fillStyle = backgroundFill || gradient;
     ctx.globalAlpha = waveOpacity || 0.5;
     ctx.fillRect(0, 0, w, h);
-    drawWave(5);
+    drawWave(isMobile ? 10 : 10, delta);
     animationId = requestAnimationFrame(render);
   };
 
@@ -104,8 +122,8 @@ export const WavyBackground = ({
     // I'm sorry but i have got to support it on safari.
     setIsSafari(
       typeof window !== "undefined" &&
-        navigator.userAgent.includes("Safari") &&
-        !navigator.userAgent.includes("Chrome")
+      navigator.userAgent.includes("Safari") &&
+      !navigator.userAgent.includes("Chrome")
     );
   }, []);
 

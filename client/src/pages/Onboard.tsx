@@ -90,7 +90,7 @@ const Onboard = () => {
         noIndex={true}
       />
       <WavyBackground className="w-full max-w-md p-4" containerClassName="min-h-screen" dir="rtl">
-        <Card className="w-full max-w-md border-border/20 shadow-2xl">
+        <Card className="w-full max-w-md border-border/20 shadow-2xl bg-white/50 backdrop-blur-md">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
               <img src={forliMascot} alt="Forli Mascot" className="w-28 h-16 object-contain" />
@@ -98,7 +98,7 @@ const Onboard = () => {
             <CardTitle className="text-2xl font-bold text-primary">
               הפעלת Follow-Me לשיחות שלא נענו
             </CardTitle>
-            <CardDescription className="text-base text-muted-foreground">
+            <CardDescription className="text-base text-black/80">
               בלחיצה על הכפתור, הפלאפון שלך יגדיר העברת שיחות אוטומטית למספר Call4li.
             </CardDescription>
           </CardHeader>
@@ -111,7 +111,7 @@ const Onboard = () => {
               הפעל העברת שיחות
             </Button>
             <Button
-              className="w-full h-14 text-lg font-semibold bg-muted text-muted-foreground hover:bg-muted/80"
+              className="w-full h-14 text-lg font-semibold bg-muted text-white/40 hover:bg-muted/80"
               onClick={handleCheckStatus}
               disabled={isLoading}
             >
