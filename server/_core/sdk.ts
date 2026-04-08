@@ -30,11 +30,9 @@ const GET_USER_INFO_WITH_JWT_PATH = `/webdev.v1.WebDevAuthPublicService/GetUserI
 
 class OAuthService {
   constructor(private client: ReturnType<typeof axios.create>) {
-    console.log("[OAuth] Initialized with baseURL:", ENV.oAuthServerUrl);
-    if (!ENV.oAuthServerUrl) {
-      console.error(
-        "[OAuth] ERROR: OAUTH_SERVER_URL is not configured! Set OAUTH_SERVER_URL environment variable."
-      );
+    // Lazy initialization - only log if OAuth is actually being used
+    if (ENV.oAuthServerUrl) {
+      console.log("[OAuth] Initialized with baseURL:", ENV.oAuthServerUrl);
     }
   }
 
@@ -301,4 +299,19 @@ class SDKServer {
   }
 }
 
-export const sdk = new SDKServer();
+// Lazy initialization of SDK - only create when needed
+let _sdkInstance: SDKServer | null = null;
+
+export function getSdk(): SDKServer {
+  if (!_sdkInstance) {
+    _sdkInstance = new SDKServer();
+  }
+  return _sdkInstance;
+}
+
+// Keep backward compatibility
+export const sdk = new Proxy({} as SDKServer, {
+  get: (_, prop) => {
+    return (getSdk() as any)[prop];
+  },
+});
