@@ -39,30 +39,22 @@ export const StickyScroll = ({
     setActiveCard(closestBreakpointIndex);
   });
 
-  const backgroundColors = [
-    "rgba(27, 20, 35, 1)", // slate-900 
-    "rgba(27, 20, 35, 1)", // black
-    "rgba(27, 20, 35, 1)", // neutral-900
-  ];
   const linearGradients = [
-    "linear-gradient(to bottom right, #06b6d4, #10b981)", // cyan-500 to emerald-500
-    "linear-gradient(to bottom right, #ec4899, #6366f1)", // pink-500 to indigo-500
-    "linear-gradient(to bottom right, #f97316, #eab308)", // orange-500 to yellow-500
+    "linear-gradient(to bottom right, rgba(88, 210, 231, 0.46), rgba(236, 76, 76, 0.3))",
+    "linear-gradient(to bottom right, rgba(236,72,153,0.3), rgba(99,102,241,0.3))",
+    "linear-gradient(to bottom right, rgba(249,115,22,0.3), rgba(234,179,8,0.3))",
+    "linear-gradient(to bottom right, rgba(22, 249, 33, 0.3), rgba(231, 231, 231, 0.3))",
   ];
 
-  const [backgroundGradient, setBackgroundGradient] = useState(
-    linearGradients[0],
-  );
+  const [backgroundGradient, setBackgroundGradient] = useState(linearGradients[0]);
 
   useEffect(() => {
     setBackgroundGradient(linearGradients[activeCard % linearGradients.length]);
   }, [activeCard]);
 
   return (
-    <motion.div
-      animate={{
-        backgroundColor: backgroundColors[activeCard % backgroundColors.length],
-      }}
+    <div
+      style={{ background: backgroundGradient, transition: "background 0.5s ease", width: "100%" }}
       className="relative flex h-[20rem] lg:h-[30rem] w-full justify-center space-x-4 lg:space-x-10 overflow-y-auto rounded-md p-4 lg:p-10 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       ref={ref}
     >
@@ -98,6 +90,6 @@ export const StickyScroll = ({
       >
         {content[activeCard].content ?? null}
       </div>
-    </motion.div>
+    </div>
   );
 };

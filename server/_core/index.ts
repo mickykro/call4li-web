@@ -1,4 +1,15 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
+
+// Load .env.local first if it exists, matching Vite's behavior
+const envLocalPath = path.resolve(process.cwd(), ".env.local");
+if (fs.existsSync(envLocalPath)) {
+  dotenv.config({ path: envLocalPath });
+}
+// Also load standard .env
+dotenv.config();
+
 import express from "express";
 import { createServer } from "http";
 import net from "net";
