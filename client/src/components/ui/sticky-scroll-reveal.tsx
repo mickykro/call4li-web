@@ -39,11 +39,20 @@ export const StickyScroll = ({
     setActiveCard(closestBreakpointIndex);
   });
 
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 1024);
+  useEffect(() => {
+    const handler = () => setIsDesktop(window.innerWidth >= 1024);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+
   const linearGradients = [
-    "linear-gradient(to bottom right, rgba(88, 210, 231, 0.46), rgba(236, 76, 76, 0.3))",
-    "linear-gradient(to bottom right, rgba(236,72,153,0.3), rgba(99,102,241,0.3))",
-    "linear-gradient(to bottom right, rgba(249,115,22,0.3), rgba(234,179,8,0.3))",
-    "linear-gradient(to bottom right, rgba(22, 249, 33, 0.3), rgba(231, 231, 231, 0.3))",
+    "radial-gradient(circle at center, rgba(88, 210, 231, 0.46), rgba(236, 76, 76, 0.3))",
+    "radial-gradient(circle at center, rgba(236,72,153,0.3), rgba(99,102,241,0.3))",
+    "radial-gradient(circle at center, rgba(249,115,22,0.3), rgba(234,179,8,0.3))",
+    isDesktop
+      ? "linear-gradient(to bottom, rgba(27,20,35,1), rgba(6,78,59,0.9), rgba(27,20,35,1))"
+      : "radial-gradient(circle at center, rgba(255, 255, 255, 1), rgba(6,78,59,0.9), rgba(27, 20, 35, 0.69))",
   ];
 
   const [backgroundGradient, setBackgroundGradient] = useState(linearGradients[0]);

@@ -4,18 +4,16 @@
  * State-driven UI for the call forwarding activation flow:
  *
  *  NEW              → Step 1: Tap to dial **004*
- *  AWAITING_004     → Verifying... (spinner + "don't answer the call")
  *  FAILED           → Fallback: 3 tap-to-call buttons (**67, **62, **61)
- *  AWAITING_67      → Verifying **67*...
- *  AWAITING_6762    → Verifying **62*...
- *  AWAITING_676261  → Verifying **61*...
  *  ACTIVE_NO_ANSWER → Partial success — nudge to complete **62 + **61
  *  ACTIVE_EXTENDED  → Almost done — nudge to complete **61
  *  ACTIVE_FULL /
  *  ACTIVE_COMPLETE  → 🎉 Full success screen
+ *
+ *  Validation happens in the background (n8n). No polling or awaiting states.
  */
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
@@ -36,10 +34,6 @@ import {
 // OnboardingState is inferred from the tRPC response
 type OnboardingState =
   | "NEW"
-  | "AWAITING_004"
-  | "AWAITING_67"
-  | "AWAITING_6762"
-  | "AWAITING_676261"
   | "ACTIVE_NO_ANSWER"
   | "ACTIVE_EXTENDED"
   | "ACTIVE_FULL"
@@ -50,9 +44,6 @@ type OnboardingState =
 
 const FORLI_MASCOT = "https://d2xsxph8kpxj0f.cloudfront.net/310519663330217393/VZvahsqxvigDNCtzbEoTYw/forli_no_bg_silver_39b12de6.png";
 
-// Polling interval while in AWAITING states (ms)
-const POLL_INTERVAL = 4000;
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface FallbackStep {
@@ -62,7 +53,7 @@ interface FallbackStep {
   consequence: string;
   icon: React.ElementType;
   color: string;
-  awaitingState: OnboardingState;
+  awaitingState?: OnboardingState;
 }
 
 const FALLBACK_STEPS: FallbackStep[] = [
@@ -96,10 +87,6 @@ const FALLBACK_STEPS: FallbackStep[] = [
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function isAwaitingState(state: OnboardingState): boolean {
-  return state.startsWith("AWAITING_");
-}
 
 function getCompletedStepCount(verifiedCodes: string[]): number {
   return verifiedCodes.filter(c => ["67", "62", "61"].includes(c)).length;
@@ -217,40 +204,24 @@ function ActivateScreen({
   );
 }
 
-// ─── Screen: Awaiting Verification ───────────────────────────────────────────
+// ─── Screen: Activated — background processing ───────────────────────────────
 
-function AwaitingScreen({ code }: { code: string }) {
+function ActivatedScreen() {
   return (
     <ScreenWrapper>
       <div className="flex flex-col items-center gap-6 text-center">
-        <div className="relative w-20 h-20">
-          <div className="absolute inset-0 rounded-full border-2 border-teal-400/30 animate-ping" />
-          <div className="w-20 h-20 rounded-full bg-teal-400/10 border border-teal-400/40 flex items-center justify-center">
-            <Loader2 className="w-9 h-9 text-teal-400 animate-spin" />
-          </div>
+        <div className="w-20 h-20 rounded-full bg-teal-400/10 border border-teal-400/40 flex items-center justify-center">
+          <CheckCircle2 className="w-9 h-9 text-teal-400" />
         </div>
-
         <div>
           <h2 className="text-2xl font-extrabold text-text-primary mb-2">
-            בודק הפעלה...
+            הפעלה בתהליך
           </h2>
           <p className="text-text-secondary text-sm leading-relaxed max-w-xs">
-            אנחנו מתקשרים למספר שלך כדי לאמת שהעברת השיחות הופעלה.
+            קיבלנו את הבקשה שלך. פורלי תהיה מוכנה בקרוב — לא צריך לעשות דבר
+            נוסף.
           </p>
         </div>
-
-        <div className="glass-card px-5 py-4 border border-amber-400/30 rounded-xl max-w-xs w-full">
-          <p className="text-amber-400 text-sm font-semibold mb-1">
-            ⚠️ אל תענה לשיחה הנכנסת
-          </p>
-          <p className="text-text-muted text-xs">
-            תקבל שיחה ממספר לא מוכר — זהו בדיקה אוטומטית. אל תענה לה.
-          </p>
-        </div>
-
-        <p className="text-text-muted text-xs">
-          קוד שהופעל: <span className="text-teal-400 font-mono">**{code}*</span>
-        </p>
       </div>
     </ScreenWrapper>
   );
@@ -261,13 +232,11 @@ function AwaitingScreen({ code }: { code: string }) {
 function FallbackScreen({
   forliNumber,
   verifiedCodes,
-  currentAwaitingCode,
   onStepActivate,
   isLoading,
 }: {
   forliNumber: string;
   verifiedCodes: string[];
-  currentAwaitingCode: string | null;
   onStepActivate: (code: "67" | "62" | "61") => void;
   isLoading: boolean;
 }) {
@@ -306,10 +275,6 @@ function FallbackScreen({
         <div className="flex flex-col gap-3">
           {FALLBACK_STEPS.map((step, i) => {
             const isVerified = verifiedCodes.includes(step.code);
-            const isAwaiting = currentAwaitingCode === step.code;
-            const prevVerified =
-              i === 0 || verifiedCodes.includes(FALLBACK_STEPS[i - 1].code);
-            const isDisabled = !prevVerified || isVerified || isAwaiting;
             const telLink = buildTelLink(step.code, forliNumber);
 
             return (
@@ -322,9 +287,7 @@ function FallbackScreen({
                 style={{
                   borderColor: isVerified
                     ? `${step.color}60`
-                    : isAwaiting
-                      ? `${step.color}40`
-                      : "rgba(255,255,255,0.08)",
+                    : "rgba(255,255,255,0.08)",
                   background: isVerified
                     ? `${step.color}08`
                     : "rgba(255,255,255,0.03)",
@@ -344,11 +307,6 @@ function FallbackScreen({
                     {isVerified ? (
                       <CheckCircle2
                         className="w-5 h-5"
-                        style={{ color: step.color }}
-                      />
-                    ) : isAwaiting ? (
-                      <Loader2
-                        className="w-4 h-4 animate-spin"
                         style={{ color: step.color }}
                       />
                     ) : (
@@ -391,29 +349,13 @@ function FallbackScreen({
                       >
                         ✓ הושלם
                       </span>
-                    ) : isAwaiting ? (
-                      <span className="text-xs text-text-muted">בודק...</span>
                     ) : (
-                      <a
-                        href={isDisabled ? undefined : telLink}
-                        onClick={
-                          isDisabled
-                            ? undefined
-                            : () => onStepActivate(step.code)
-                        }
-                      >
+                      <a href={telLink} onClick={() => onStepActivate(step.code)}>
                         <Button
                           size="sm"
-                          disabled={isDisabled || isLoading}
+                          disabled={isLoading}
                           className="text-xs font-bold gap-1.5"
-                          style={
-                            !isDisabled
-                              ? {
-                                  background: step.color,
-                                  color: "#0D0B14",
-                                }
-                              : {}
-                          }
+                          style={{ background: step.color, color: "#0D0B14" }}
                         >
                           <Phone className="w-3.5 h-3.5" />
                           חייג
@@ -426,18 +368,6 @@ function FallbackScreen({
             );
           })}
         </div>
-
-        {/* Awaiting notice */}
-        {currentAwaitingCode && (
-          <div className="glass-card px-4 py-3 border border-amber-400/30 rounded-xl">
-            <p className="text-amber-400 text-xs font-semibold mb-0.5">
-              ⚠️ אל תענה לשיחה הנכנסת
-            </p>
-            <p className="text-text-muted text-xs">
-              אנחנו מתקשרים לבדיקה — אל תענה.
-            </p>
-          </div>
-        )}
       </div>
     </ScreenWrapper>
   );
@@ -604,36 +534,25 @@ export default function Onboard() {
   const clientId = params.client_id;
 
   const [isActivating, setIsActivating] = useState(false);
+  const [hasActivated, setHasActivated] = useState(false);
 
   const {
     data: status,
     isLoading,
     error,
-    refetch,
   } = trpc.onboarding.getStatus.useQuery(
     { clientId: clientId ?? "" },
     { enabled: !!clientId, refetchInterval: false },
   );
 
   const activateMutation = trpc.onboarding.activate.useMutation({
-    onSuccess: () => {
-      setIsActivating(false);
-      refetch();
-    },
-    onError: () => setIsActivating(false),
+    onSettled: () => setIsActivating(false),
   });
-
-  // Poll while in AWAITING states
-  useEffect(() => {
-    if (!status) return;
-    if (!isAwaitingState(status.state)) return;
-    const timer = setInterval(() => refetch(), POLL_INTERVAL);
-    return () => clearInterval(timer);
-  }, [status?.state, refetch]);
 
   const handleActivate = (code: "004" | "67" | "62" | "61") => {
     if (!clientId) return;
     setIsActivating(true);
+    if (code === "004") setHasActivated(true);
     activateMutation.mutate({ clientId, code });
   };
 
@@ -644,12 +563,7 @@ export default function Onboard() {
     const { state, verifiedCodes, forliNumber, name } = status;
     const fn = forliNumber ?? "0535972420";
 
-    const awaitingCode = (() => {
-      if (state === "AWAITING_67") return "67";
-      if (state === "AWAITING_6762") return "62";
-      if (state === "AWAITING_676261") return "61";
-      return null;
-    })();
+    if (state === "NEW" && hasActivated) return <ActivatedScreen />;
 
     switch (state) {
       case "NEW":
@@ -660,26 +574,11 @@ export default function Onboard() {
             isLoading={isActivating}
           />
         );
-      case "AWAITING_004":
-        return <AwaitingScreen code="004" />;
       case "FAILED":
         return (
           <FallbackScreen
             forliNumber={fn}
             verifiedCodes={verifiedCodes}
-            currentAwaitingCode={null}
-            onStepActivate={handleActivate}
-            isLoading={isActivating}
-          />
-        );
-      case "AWAITING_67":
-      case "AWAITING_6762":
-      case "AWAITING_676261":
-        return (
-          <FallbackScreen
-            forliNumber={fn}
-            verifiedCodes={verifiedCodes}
-            currentAwaitingCode={awaitingCode}
             onStepActivate={handleActivate}
             isLoading={isActivating}
           />

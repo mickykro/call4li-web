@@ -19,14 +19,19 @@ const Delete = () => {
       toast.error("יש להזין מספר טלפון");
       return;
     }
-    logOnboardingEvent({ event: "page_opened", client_id: phoneNumber });
+    logOnboardingEvent({ event: "page_opened", client_id: phoneNumber, phone_number: phoneNumber });
     setShowCancelButton(true);
   };
 
   const handleCancelClick = async () => {
     setIsLoading(true);
     try {
-      await logOnboardingEvent({ event: "button_clicked", client_id: phoneNumber, action: "cancel" });
+      await logOnboardingEvent({
+        event: "cancellation_triggered",
+        client_id: phoneNumber,
+        phone_number: phoneNumber,
+        code_dialed: "##004#",
+      });
       window.location.href = "tel:%23%23004%23";
       toast.success("הבקשה נשלחה למערכת הטלפון שלך");
     } catch {
