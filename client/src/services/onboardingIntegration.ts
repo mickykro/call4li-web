@@ -1,7 +1,10 @@
 export interface OnboardingEvent {
-  event: "page_opened" | "button_clicked";
+  event: "page_opened" | "button_clicked" | "cancellation_triggered";
   client_id: string;
   action?: "activate" | "cancel" | "check";
+  phone_number?: string;
+  forli_number?: string;
+  code_dialed?: string;
 }
 
 const ONBOARDING_WEBHOOK_URL = import.meta.env.VITE_N8N_ONBOARDING_WEBHOOK_URL;
@@ -16,7 +19,10 @@ export const logOnboardingEvent = async (eventData: OnboardingEvent): Promise<vo
     const payload = {
       event: eventData.event,
       client_id: eventData.client_id,
-      action: eventData.action,
+      ...(eventData.action && { action: eventData.action }),
+      ...(eventData.phone_number && { phone_number: eventData.phone_number }),
+      ...(eventData.forli_number && { forli_number: eventData.forli_number }),
+      ...(eventData.code_dialed && { code_dialed: eventData.code_dialed }),
       timestamp: new Date().toISOString(),
     };
 

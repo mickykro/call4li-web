@@ -200,43 +200,7 @@ export default function HeroSection() {
         </motion.div>
       </div>
 
-      {/* Forli head silhouette — ears + ribbon bow at crown */}
-      <div className="absolute bottom-0 left-0 right-0 overflow-hidden leading-none pointer-events-none">
-        <svg
-          viewBox="0 0 1440 140"
-          preserveAspectRatio="none"
-          className="w-full block"
-          style={{ height: "140px" }}
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {/* Soft back layer — depth shadow */}
-          <path
-            d="M0,140 L0,112 L300,112 C345,112 372,100 398,84 L348,44 L518,78 C552,68 588,58 624,52 L720,48 C756,52 792,62 828,72 L922,78 L1092,44 C1118,60 1145,84 1190,84 C1218,100 1245,112 1290,112 L1440,112 L1440,140 Z"
-            fill="rgba(17,20,35,0.45)"
-          />
-          {/* Main silhouette — wide ears at 45° outward, rounded dome, ribbon bow at crown */}
-          <path
-            d="M0,140
-               L0,92
-               L238,92
-               C284,92 318,80 346,66
-               L280,0
-               L506,66
-               C532,50 566,32 600,22
-               L672,17
-               L690,26 L706,41 L720,23 L734,41 L750,26
-               L768,17
-               C804,22 840,34 870,48
-               L934,66
-               L1160,0
-               L1094,66
-               C1122,80 1156,92 1202,92
-               L1440,92
-               L1440,140 Z"
-            fill="rgba(17,20,35,1)"
-          />
-        </svg>
-      </div>
+    
     </section>
   );
 }

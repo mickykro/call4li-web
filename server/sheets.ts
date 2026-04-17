@@ -80,6 +80,10 @@ export function parseState(raw: string | undefined): OnboardingState {
 
 /** Fetch all rows from the leads sheet via the Google Sheets REST API (API key auth) */
 export async function fetchLeadsRows(): Promise<string[][]> {
+  console.log(process.env.GOOGLE_SHEETS_API_KEY);
+  console.log(process.env.GOOGLE_SHEETS_SPREADSHEET_ID);
+  console.log(process.env.GOOGLE_SHEETS_LEADS_TAB);
+
   const apiKey = process.env.GOOGLE_SHEETS_API_KEY;
   const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
   const sheetName = process.env.GOOGLE_SHEETS_LEADS_TAB ?? "leads";
