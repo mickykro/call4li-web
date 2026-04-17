@@ -65,11 +65,11 @@ export const WavyBackground = ({
   };
 
   const waveColors = colors ?? [
-    "#38bdf8",
-    "#818cf8",
-    "#c084fc",
-    "#e879f9",
-    "#22d3ee",
+    "#4AEADC",
+    "#8B5CF6",
+    "#60A5FA",
+    "#EC4899",
+    "#10B981",
   ];
 
   const drawWave = (n: number, delta: number) => {
@@ -84,7 +84,7 @@ export const WavyBackground = ({
       for (x = 0; x < w; x += 5) {
         var waveHeight = isMobile ? 1.7 : 1;
         var y = noise(x / 800, 0.5 * i, ntRef.current) * waveHeight * 100;
-        ctx.lineTo(x, y + h * 0.2 + i * 10 + (x / w) * h * 0.53); // Added i * 20 for space between lines
+        ctx.lineTo(x, y + h * 0.2 + i * 10 + (x / w) * h * 0.53);
       }
       ctx.stroke();
       ctx.closePath();
@@ -98,11 +98,11 @@ export const WavyBackground = ({
 
     const isMobile = window.innerWidth < 768;
     const gradient = ctx.createLinearGradient(100, 500, w, h);
-    gradient.addColorStop(0, "#090909ff");     // soft white-blue
-    gradient.addColorStop(0.3, "#00304aff");   // light sky blue
-    gradient.addColorStop(0.5, "#022e19ff");   // light emerald/green
-    gradient.addColorStop(0.7, "#000000ff");   // light pink
-    gradient.addColorStop(1, "#001245ff");     // soft white-blue
+    gradient.addColorStop(0, "#090909ff");
+    gradient.addColorStop(0.3, "#00304aff");
+    gradient.addColorStop(0.5, "#022e19ff");
+    gradient.addColorStop(0.7, "#000000ff");
+    gradient.addColorStop(1, "#001245ff");
     ctx.fillStyle = backgroundFill || gradient;
     ctx.globalAlpha = waveOpacity || 0.5;
     ctx.fillRect(0, 0, w, h);
@@ -119,7 +119,6 @@ export const WavyBackground = ({
 
   const [isSafari, setIsSafari] = useState(false);
   useEffect(() => {
-    // I'm sorry but i have got to support it on safari.
     setIsSafari(
       typeof window !== "undefined" &&
       navigator.userAgent.includes("Safari") &&
